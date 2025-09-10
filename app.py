@@ -7,9 +7,6 @@ from datetime import timedelta
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM, Dropout, Input
-import plotly.graph_objects as go
-import base64
-from io import BytesIO
 import tensorflow as tf
 import warnings
 import os
@@ -41,18 +38,6 @@ def create_model(time_steps, n_features):
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mean_squared_error')
     return model
-
-
-def plot_chart(dates, actual_values, future_dates, future_predictions, ticker):
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=dates, y=actual_values.flatten(), name="Actual Price", line=dict(color="blue")))
-    fig.add_trace(go.Scatter(x=future_dates, y=future_predictions.flatten(), name="Future Prediction", line=dict(color="purple", dash="dash")))
-    fig.update_layout(title=f"{ticker} Stock Prediction", xaxis_title="Date", yaxis_title="Price")
-
-    buf = BytesIO()
-    fig.write_image(buf, format="png")
-    img_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-    return img_b64
 
 
 # ----------- API Endpoint -----------
@@ -96,16 +81,14 @@ def predict_stock(request: StockRequest):
             seq[-1, 0] = pred.item()
 
         future_dates = pd.date_range(data.index[-1] + timedelta(days=1), periods=request.future_days, freq="B")
-        actual_values = features[-len(y):]
 
-        # 5. Chart + Predictions Table
-        chart_img = plot_chart(data.index, actual_values, future_dates, np.array(future_predictions), request.ticker)
+        # 5. Only Predictions Table (no chart)
         predictions_table = [
             {"date": str(d.date()), "predicted_price": round(float(p), 2)}
             for d, p in zip(future_dates, future_predictions)
         ]
 
-        return {"chart": chart_img, "predictions": predictions_table}
+        return {"predictions": predictions_table}
 
     except Exception as e:
         return {"error": str(e)}
