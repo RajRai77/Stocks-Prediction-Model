@@ -93,7 +93,7 @@ def get_prediction():
         for index, row in historical_chart_data.iterrows():
             chart_data.append({
                 "date": index.strftime('%Y-%m-%d'),
-                "price": row['Close'],
+                "price": float(row['Close']), # <-- FIX: Convert to a standard float
                 "type": "historical"
             })
         
