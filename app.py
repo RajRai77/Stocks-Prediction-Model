@@ -18,6 +18,7 @@ MODEL_DIR = "models" # Directory where your .h5 and .pkl files are stored
 app = Flask(__name__)
 
 # --- Prediction Helper Functions ---
+# THIS IS THE NEW, CORRECTED FUNCTION
 def predict_future(model, last_sequence, scaler, n_future):
     """Predicts future stock values using a pre-trained model."""
     future_predictions_scaled = []
@@ -26,7 +27,13 @@ def predict_future(model, last_sequence, scaler, n_future):
     for _ in range(n_future):
         next_pred_scaled = model.predict(current_sequence, verbose=0)
         future_predictions_scaled.append(next_pred_scaled[0, 0])
-        current_sequence = np.append(current_sequence[:, 1:, :], [[next_pred_scaled]], axis=1)
+        
+        # --- THIS IS THE FIX ---
+        # Reshape the prediction to 3D before appending
+        new_pred_reshaped = next_pred_scaled.reshape(1, 1, 1)
+        # Append the correctly shaped prediction
+        current_sequence = np.append(current_sequence[:, 1:, :], new_pred_reshaped, axis=1)
+        # ----------------------
 
     future_predictions = scaler.inverse_transform(np.array(future_predictions_scaled).reshape(-1, 1))
     return future_predictions
