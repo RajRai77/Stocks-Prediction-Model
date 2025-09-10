@@ -1,8 +1,8 @@
-fastapi
-uvicorn
+gunicorn
+Flask
+tensorflow
+scikit-learn
 yfinance
 numpy
 pandas
-scikit-learn
-tensorflow
-
+joblib
